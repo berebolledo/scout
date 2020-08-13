@@ -101,12 +101,13 @@
 
 {% macro subpanels_macro()%}
 <div class="card mt-3">
-  {% for key,value in phenomodel.submodels.items() %}
-    <li>
-      {{ key }}--{{value.title}}, {{value.subtitle}}<br>
-      {{ nested_item(value.hpo_groups.root.children) }}
-    </li>
-  {% endfor %}
+  {%if phenomodel.submodels %}
+    {% for key,value in phenomodel.submodels.items() if phenomodel.submodels %}
+      <li>
+        {{ key }}--{{value.title}}, {{value.subtitle}}<br>
+      </li>
+    {% endfor %}
+  {% endif %}
 </div>
 {% endmacro %}
 

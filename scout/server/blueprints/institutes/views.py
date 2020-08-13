@@ -403,7 +403,10 @@ def phenomodel(institute_id, model_id):
                 # create submodel
                 updated_model = controllers.create_submodel(store, model_id, request)
                 if updated_model is None:
-                    flash("An error occurred while generating the submodel", "warning")
+                    flash(
+                        "An error occurred while generating the submodel. Make sure that no other subpanel has the same title",
+                        "warning",
+                    )
                 else:
                     flash("Phenotype model was updated correctly", "success")
 

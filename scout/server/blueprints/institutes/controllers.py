@@ -534,6 +534,5 @@ def create_submodel(store, model_id, request):
     hpo_terms = []
     for term in hpo_groups:
         hpo_terms.append(term.split(" ")[0])
-
     updated_model = store.add_pheno_submodel(model_id, submodel_title, submodel_subtitle, hpo_terms)
     return updated_model

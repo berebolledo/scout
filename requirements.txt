@@ -41,4 +41,6 @@ python-dateutil
 
 # Required by scripts
 tabulate
-treelib
+
+# Build ontology tree
+anytree
