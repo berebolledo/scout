@@ -461,7 +461,7 @@ def clinvar_lines(clinvar_objects, clinvar_header_obj):
 
 
 def update_phenomodel(store, institute_id, request):
-    """Create a new advanced phenotype panel for one institute
+    """Create a new advanced phenotype panel for one institute or updates an existing model
 
     Args:
         store(adapter.MongoAdapter)
@@ -469,11 +469,11 @@ def update_phenomodel(store, institute_id, request):
         institute_id(str) institute id
 
     Returns:
-        pheno_panel(dict)
+        new_model(dict)
     """
     model_name = request.form.get("model_name")
     model_desc = request.form.get("model_desc")
-    if request.form.get("update") is not None:  # update an existing model
+    if request.form.get("update_model") is not None:  # update an existing model
         store.phenomodel_collection.find_one_and_update(
             {"_id": request.form.get("model_id")},
             {
@@ -502,6 +502,7 @@ def phenomodel(store, model_id):
     """Retrieve a phenomodel object from database for a specific institute and organize the phenomodel page content
 
     Args:
+        store(adapter.MongoAdapter)
         model_id(str): id of a phenomodel
 
     Returns:
@@ -514,3 +515,25 @@ def phenomodel(store, model_id):
         return redirect(request.referrer)
     phenomodel_obj = phenomodels[0]
     return phenomodel_obj
+
+
+def create_submodel(store, model_id, request):
+    """Add a submodel to a phenotyping model
+
+    Args:
+        store(adapter.MongoAdapter)
+        model_id(str): id of a phenomodel
+        request(flask.request) POST request sent by form submission
+
+    Returns:
+        updated_model(dict): an updated phenotype model dictionary
+    """
+    submodel_title = request.form.get("title")
+    submodel_subtitle = request.form.get("subtitle")
+    hpo_groups = request.form.getlist("pheno_groups")
+    hpo_terms = []
+    for term in hpo_groups:
+        hpo_terms.append(term.split(" ")[0])
+
+    updated_model = store.add_pheno_submodel(model_id, submodel_title, submodel_subtitle, hpo_terms)
+    return updated_model

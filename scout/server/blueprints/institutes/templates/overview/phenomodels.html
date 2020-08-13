@@ -83,8 +83,8 @@
         <tbody>
           {% for model in phenomodels %}
             <tr>
-              <td>{{model.name}}
-                <a href="{{ url_for('overview.phenomodel', institute_id=institute._id, model_id=model._id) }}"><button class="btn btn-primary btn-xs"><i class="fa fa-plus fa-xs"></i></button></a>
+              <td>
+                <a href="{{ url_for('overview.phenomodel', institute_id=institute._id, model_id=model._id) }}">{{model.name}}</button></a>
               </td>
               <td>{{model.description}}</td>
               <td></td>
@@ -92,7 +92,7 @@
               <td>{{model.created.strftime('%Y-%m-%d')}}</td>
               <td>{{model.updated.strftime('%Y-%m-%d')}}</td>
               <td>
-                <button type="button" class="btn btn-danger btn-xs removeModel" data-id="{{model._id}}" aria-hidden="true" data-toggle="modal" data-target="#deleteModal"><i class="fa fa-trash-o fa-xs"></i></button>
+                <button type="button" class="btn btn-danger btn-sm removeModel" data-id="{{model._id}}" aria-hidden="true" data-toggle="modal" data-target="#deleteModal"><i class="fa fa-trash-o"></i></button>
               </td>
             </tr>
           {% endfor %}

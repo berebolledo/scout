@@ -3,11 +3,12 @@ import logging
 import datetime
 
 import operator
-
+from treelib import Node, Tree
 from pymongo.errors import DuplicateKeyError, BulkWriteError
 import pymongo
 
 from scout.exceptions import IntegrityError
+from scout.utils.md5 import generate_md5_key
 
 LOG = logging.getLogger(__name__)
 
@@ -146,7 +147,7 @@ class HpoHandler(object):
         return phenotype_models
 
     def create_phenomodel(self, id, institute_id, name, description):
-        """Create an empty advanced phenotype panel with data provided by a user
+        """Create an empty advanced phenotype model with data provided by a user
 
         Args:
             id(str) a md5_key id
@@ -165,5 +166,91 @@ class HpoHandler(object):
             created=datetime.datetime.now(),
             updated=datetime.datetime.now(),
         )
-        phenomodel_obj = self.phenomodel_collection.insert_one(phenopanel_obj)
+        phenomodel_obj = self.phenomodel_collection.insert_one(phenomodel_obj)
         return phenomodel_obj
+
+    def build_phenotype_tree(self, hpo_ids):
+        """Creates an HPO Tree based on one or more given ancestors
+        Args:
+            hpo_id(str): an HPO term (ancestor)
+        Returns:
+            hpo_tree(treelib.Tree): a tree of all children HPO terms
+        """
+        tree = Tree()
+        tree.create_node("root", "root")
+        all_terms = {}
+
+        def _hpo_terms_list(hpo_ids):
+            for id in hpo_ids:
+                term_obj = self.hpo_term(id)
+                if term_obj is None:
+                    continue
+                if tree.get_node(id) is None:  # no duplicated nodes
+                    tree.create_node(
+                        id,
+                        id,
+                        parent="root",
+                        data={"hpo_id": id, "description": term_obj["description"]},
+                    )
+                all_terms[id] = term_obj
+                _hpo_terms_list(term_obj["children"])
+
+        # compile a list of all HPO term objects to include in the submodel
+        _hpo_terms_list(hpo_ids)
+
+        # Organize the tree according to the ontology
+        for key, term in all_terms.items():
+            ancestors = term["ancestors"]
+            if len(ancestors) == 0:
+                continue
+            for ancestor in ancestors:
+                if ancestor == "root" or tree.get_node(ancestor) is None:
+                    continue
+                # if ancestor node exists move this node under the ancestor
+                try:
+                    tree.move_node(key, ancestor)
+                except Exception as ex:
+                    LOG.warning(f"Error trying to move {key} from root to {ancestor}!")
+
+        LOG.info(f"Built ontology for HPO terms:{hpo_ids}:\n{tree}")
+        return tree
+
+    def add_pheno_submodel(self, model_id, submodel_title, submodel_subtitle, hpo_ids):
+        """Adds a new phenotype submodel (one or more HPO terms with their children) to a phenotype model.
+
+        Args:
+            model_id(str): id of a phenotype model
+            submodel_title(str): title of submodel
+            submodel_subtitle(str): subtitle of submodel
+            hpo_ids(list): a list of HPO term IDs (example HP:0012759)
+
+        Returns:
+            updated_model(dict): a dictionary corresponding to the updated phenotype model
+        """
+        # Create an HPO tree for each of the ancestror terms
+        hpo_tree = self.build_phenotype_tree(hpo_ids)
+        if hpo_tree is None:
+            return
+        tree_obj = hpo_tree.to_dict(with_data=True)
+
+        # update model by adding the new submodel
+        submodel_id = generate_md5_key([model_id, submodel_title])
+        submodel_obj = dict(
+            title=submodel_title,
+            subtitle=submodel_subtitle,
+            hpo_groups=tree_obj,
+            created=datetime.datetime.now(),
+            updated=datetime.datetime.now(),
+        )
+
+        updated_model = self.phenomodel_collection.find_one_and_update(
+            {"_id": model_id},
+            {
+                "$set": {
+                    ".".join(["submodels", submodel_id]): submodel_obj,
+                    "updated": datetime.datetime.now(),
+                }
+            },
+            return_document=pymongo.ReturnDocument.AFTER,
+        )
+        return updated_model

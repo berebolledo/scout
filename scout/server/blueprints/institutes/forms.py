@@ -44,7 +44,9 @@ class HpoListMultiSelect(SelectMultipleField):
     def pre_validate(self, form):
         hpo_term = None
         for choice in form.pheno_groups.data:  # chech that HPO terms are valid
-            hpo_term = choice.split(" ")[0]
+            hpo_term = choice.split(" ")[
+                0
+            ]  # HPO terms formatted like this 'HP:0001298 , Encephalopathy ( ENC )'
             if store.hpo_term(hpo_term) is None:
                 form.pheno_groups.errors.append(f"'{hpo_term}' is not a valid HPO term")
                 return False

@@ -349,7 +349,6 @@ def advanced_phenotypes(institute_id):
     institute_obj = institute_and_case(store, institute_id)
 
     if request.form.get("create_model"):  # creating a new phenopanel
-        flash("HELLO!")
         if controllers.update_phenomodel(store, institute_id, request) is not None:
             flash(
                 f"Phenotype panel {request.form.get('model_name')} was successfully created.",
@@ -386,8 +385,8 @@ def remove_phenomodel():
 @templated("overview/phenomodel.html")
 def phenomodel(institute_id, model_id):
     """View/Edit an advanced phenotype model"""
-
     institute_obj = institute_and_case(store, institute_id)
+
     pheno_form = PhenoModelForm(request.form)
     subpanel_form = PhenoSubPanelForm(request.form)
     default_phenotypes = [choice[0].split(" ")[0] for choice in subpanel_form.pheno_groups.choices]
@@ -400,9 +399,18 @@ def phenomodel(institute_id, model_id):
         if request.form.get("add_subpanel"):  # new subpanel
             if subpanel_form.validate_on_submit() is False:
                 hide_subpanel = False
-            # create subpanel
+            else:
+                # create submodel
+                updated_model = controllers.create_submodel(store, model_id, request)
+                if updated_model is None:
+                    flash("An error occurred while generating the submodel", "warning")
+                else:
+                    flash("Phenotype model was updated correctly", "success")
 
     phenomodel_obj = controllers.phenomodel(store, model_id)
+    if pheno_form.model_name.data == "":
+        pheno_form.model_name.data = phenomodel_obj["name"]
+        pheno_form.model_desc.data = phenomodel_obj["description"]
 
     return dict(
         institute=institute_obj,

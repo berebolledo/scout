@@ -27,12 +27,6 @@
   </li>
 {% endblock %}
 
-{% macro subpanels_macro() %}
-{% for panel in subpanels %}
-  {{panel}}
-{% endfor %}
-{% endmacro %}
-
 {% macro phenomodel_macro() %}
 <div class="card mt-3">
   <div style="padding: 0;" class="card-body mt-3 ml-3 mr-3">
@@ -46,7 +40,7 @@
           {{ pheno_form.model_desc(class="form-control", placeholder="Description (optional)") }}
         </div>
         <div class="col-1">
-          <button type="submit" value="save" name="update_model" class="btn btn-primary">save</button
+          <button type="submit" value="update" name="update_model" class="btn btn-primary">update</button
         </div>
       </div>
       <h6 class="text-muted ml-3 mt-3">created: {{phenomodel.created.strftime('%Y-%m-%d')}} - updated: {{phenomodel.updated.strftime('%Y-%m-%d')}}</h6>
@@ -63,7 +57,7 @@
         {{ subpanel_form.csrf_token }}
         <div class="form-row mt-3 ml-3 d-flex justify-content-between">
           <div class="form-group col-md-11">
-            {{ subpanel_form.pheno_groups.label(class="control-label", data_toggle="tooltip", data_placement="top", title="All HPO terms children of this term will be displayed as checkboxes in the model sub-panel") }}<br>
+            {{ subpanel_form.pheno_groups.label(class="control-label", data_toggle="tooltip", data_placement="top", title="All HPO terms children of this terms will be displayed as checkboxes in the model sub-panel. These HPO groups can always be modified in the future.") }}<br>
             <select multiple="multiple" id="pheno_groups" name="pheno_groups" class="form-control mr-3" style="width:100%;">
               <!--print selected options-->
               {% for choice in subpanel_form.pheno_groups.data %}
@@ -98,8 +92,22 @@
     </div>
   </div>
 </div>
-</div>
 {{ subpanels_macro() }}
+{% endmacro %}
+
+{% macro nested_item(children) %}
+  {{children}}<br><br>
+{% endmacro %}
+
+{% macro subpanels_macro()%}
+<div class="card mt-3">
+  {% for key,value in phenomodel.submodels.items() %}
+    <li>
+      {{ key }}--{{value.title}}, {{value.subtitle}}<br>
+      {{ nested_item(value.hpo_groups.root.children) }}
+    </li>
+  {% endfor %}
+</div>
 {% endmacro %}
 
 

@@ -181,3 +181,62 @@ def test_fetch_all_hpo_terms_query_description_term(real_adapter):
 
     ## THEN assert only one term was matched
     assert len([term for term in res]) == 2
+
+
+def test_add_hpo_submodel(adapter):
+    """Testing the function that creates an HPO tree based on provided HPO terms"""
+
+    # GIVEN an HPO collection containing nested HPO terms
+    #    + HP:0000271
+    #         + ├── HP:0000309
+    #         + │   ├── HP:0012371
+    #         + │   └── HP:0430026
+    #         + └── HP:0000366
+
+    test_hpo_terms = [
+        {
+            "_id": "HP:0000271",
+            "hpo_id": "HP:0000271",
+            "description": "Abnormality of the face",
+            "children": ["HP:0000309", "HP:0000366"],
+            "ancestors": [],
+        },
+        {
+            "_id": "HP:0000309",
+            "hpo_id": "HP:0000309",
+            "description": "Abnormality of the face",
+            "children": ["HP:0430026", "HP:0012371"],
+            "ancestors": ["HP:0000271"],
+        },
+        {
+            "_id": "HP:0430026",
+            "hpo_id": "HP:0430026",
+            "description": "Abnormality of the shape of the midface",
+            "children": [],
+            "ancestors": ["HP:0000309"],
+        },
+        {
+            "_id": "HP:0012371",
+            "hpo_id": "HP:0012371",
+            "description": "Hyperplasia of midface",
+            "children": [],
+            "ancestors": ["HP:0000309"],
+        },
+        {
+            "_id": "HP:0000366",
+            "hpo_id": "HP:0000366",
+            "description": "Abnormality of the nose",
+            "children": [],
+            "ancestors": ["HP:0000271"],
+        },
+    ]
+    adapter.hpo_term_collection.insert_many(test_hpo_terms)
+
+    # WHEN the build_phenotype_tree function is invoked
+    ancestors = ["HP:0000271"]
+    hpo_tree = adapter.build_phenotype_tree(ancestors)
+
+    # THEN it should return the correct tree structure:
+    assert hpo_tree.depth() == 2
+    assert hpo_tree.depth("HP:0012371") == 2
+    assert hpo_tree.depth("HP:0000309") == 1

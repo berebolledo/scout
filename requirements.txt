@@ -41,3 +41,4 @@ python-dateutil
 
 # Required by scripts
 tabulate
+treelib
