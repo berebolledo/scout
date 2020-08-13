@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 import datetime
-
 import operator
+import os
 from anytree import RenderTree, Node, search
 from anytree.exporter import DictExporter
 from collections import OrderedDict
@@ -224,7 +224,6 @@ class HpoHandler(object):
         submodel_id = generate_md5_key([model_id, title])
         submodel_key = ".".join(["submodels", submodel_id])
         query = {"_id": model_id, submodel_key: {"$exists": True}}
-        LOG.error(query)
         result = self.phenomodel_collection.find_one(query)
         return result
 

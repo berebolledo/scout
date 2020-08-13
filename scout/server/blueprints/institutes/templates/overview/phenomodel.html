@@ -9,6 +9,11 @@
 {{ super() }}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.12/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+.tree {
+  list-style-type: none;
+}
+</style>
 {% endblock %}
 
 {% block top_nav %}
@@ -100,15 +105,33 @@
 {% endmacro %}
 
 {% macro subpanels_macro()%}
-<div class="card mt-3">
+<form action="">
   {%if phenomodel.submodels %}
-    {% for key,value in phenomodel.submodels.items() if phenomodel.submodels %}
-      <li>
-        {{ key }}--{{value.title}}, {{value.subtitle}}<br>
-      </li>
+    {% for key, submodel in phenomodel.submodels.items()%}
+      <div class="card mt-3">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-3" style="background-color: #e3e3e3;">
+              <h5 class="card-title">{{submodel.title}}</h5>
+              <h6 class="card-subtitle mb-2 text-muted">{{submodel.subtitle}}</h6>
+            </div>
+            <div class="col-9">
+              {%- for item in submodel.hpo_groups.children recursive %}
+                <li class="tree">
+                  <input type="checkbox" id="{{item.name}}" name="{{item.name}}">
+                  <label for="{{item.name}}">{{ item.name }}<strong>({{item.description}})</strong></label>
+                  {%- if item.children -%}
+                    <ul class="tree">{{ loop(item.children) }}</ul>
+                  {%- endif %}
+                </li>
+              {%- endfor %}
+            </div> <!--end of phenotype tree column div-->
+          </div> <!--end of div row-->
+        </div>
+      </div>
     {% endfor %}
   {% endif %}
-</div>
+</form>
 {% endmacro %}
 
 

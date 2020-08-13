@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 import datetime
+import pprint
 import logging
+import os
 
 LOG = logging.getLogger(__name__)
 
 from flask_login import current_user
-from flask import flash
+from flask import flash, current_app
 from scout.constants import CASE_STATUSES
 from scout.parse.clinvar import clinvar_submission_header, clinvar_submission_lines
 from scout.server.blueprints.genes.controllers import gene
@@ -514,6 +516,7 @@ def phenomodel(store, model_id):
         flash(f"Couldn't find any advanced phenotype model with the provided id", "warning")
         return redirect(request.referrer)
     phenomodel_obj = phenomodels[0]
+
     return phenomodel_obj
 
 
@@ -535,4 +538,5 @@ def create_submodel(store, model_id, request):
     for term in hpo_groups:
         hpo_terms.append(term.split(" ")[0])
     updated_model = store.add_pheno_submodel(model_id, submodel_title, submodel_subtitle, hpo_terms)
+
     return updated_model
