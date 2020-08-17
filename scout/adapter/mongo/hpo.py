@@ -3,7 +3,7 @@ import logging
 import datetime
 import operator
 import os
-from anytree import RenderTree, Node, search
+from anytree import RenderTree, Node, search, resolver
 from anytree.exporter import DictExporter
 from collections import OrderedDict
 from pymongo.errors import DuplicateKeyError, BulkWriteError
@@ -171,14 +171,14 @@ class HpoHandler(object):
         phenomodel_obj = self.phenomodel_collection.insert_one(phenomodel_obj)
         return phenomodel_obj
 
-    def build_phenotype_tree(self, hpo_ids):
+    def build_phenotype_tree(self, hpo_id):
         """Creates an HPO Tree based on one or more given ancestors
         Args:
-            hpo_ids(list): a list of HPO terms
+            hpo_id(str): an HPO term
         Returns:
-            hpo_tree(treelib.Tree): a tree of all children HPO terms
+            hpo_tree(treelib.Tree): a tree of all HPO children of the given term
         """
-        root = Node(id="root", name="root")
+        root = Node(id="root", name="root", parent=None)
         all_terms = {}
         unique_terms = set()
 
@@ -194,7 +194,9 @@ class HpoHandler(object):
                 _hpo_terms_list(term_obj["children"])
 
         # compile a list of all HPO term objects to include in the submodel
-        _hpo_terms_list(hpo_ids)
+        _hpo_terms_list([hpo_id])
+
+        node_resolver = resolver.Resolver("name")
 
         # Move tree nodes in the right position according to the ontology
         for key, term in all_terms.items():
@@ -204,12 +206,14 @@ class HpoHandler(object):
             for ancestor in ancestors:
                 LOG.info(f"Look for ancestor node:{ancestor}")
                 ancestor_node = search.find(root, lambda node: node.name == ancestor)
-                if ancestor_node is None:  # It's probably the terms in top
+                if ancestor_node is None:  # It's probably the term on the top
                     continue
                 node = search.find(root, lambda node: node.name == key)
                 node.parent = ancestor_node
-        LOG.info(f"Built ontology for HPO terms:{hpo_ids}:\n{RenderTree(root)}")
-        return root
+
+        term_node = node_resolver.get(root, hpo_id)
+        LOG.info(f"Built ontology for HPO term:{hpo_id}:\n{RenderTree(term_node)}")
+        return term_node
 
     def find_submodel(self, model_id, title):
         """Return a phenotype submodel by providing its parent model and its title
@@ -244,21 +248,26 @@ class HpoHandler(object):
         if model_exists:
             return
 
+        hpo_trees = {}
+
         # Create an HPO tree with all HPO terms of the subpanel
-        hpo_tree = self.build_phenotype_tree(hpo_ids)
-        if hpo_tree is None:
-            return
-        tree_obj = {}
-        root = Node(id="root", name="root")
-        # Create object that exports tree node to dictionary
-        exporter = DictExporter(dictcls=OrderedDict, attriter=sorted)
-        tree_dict = exporter.export(hpo_tree)
+        for term in hpo_ids:
+            hpo_tree = self.build_phenotype_tree(term)
+
+            if hpo_tree is None:
+                hpo_trees[term] = {}
+
+            # Create object that exports tree node to dictionary
+            exporter = DictExporter(dictcls=OrderedDict, attriter=sorted)
+            tree_dict = exporter.export(hpo_tree)
+
+            hpo_trees[term] = tree_dict
 
         # Create submodel dictionary
         submodel_obj = dict(
             title=submodel_title,
             subtitle=submodel_subtitle,
-            hpo_groups=tree_dict,
+            hpo_groups=hpo_trees,
             created=datetime.datetime.now(),
             updated=datetime.datetime.now(),
         )

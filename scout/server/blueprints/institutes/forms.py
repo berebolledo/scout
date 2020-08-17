@@ -40,7 +40,7 @@ class HpoListMultiSelect(SelectMultipleField):
                 0
             ]  # HPO terms formatted like this 'HP:0001298 , Encephalopathy ( ENC )'
             if store.hpo_term(hpo_term) is None:
-                form.pheno_groups.errors.append(f"'{hpo_term}' is not a valid HPO term")
+                form.pheno_groups.errors.append(f"HPO term '{hpo_term}' not found in database")
                 return False
 
 
