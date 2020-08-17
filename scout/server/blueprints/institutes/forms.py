@@ -12,9 +12,36 @@ from wtforms import (
     validators,
     Field,
 )
+from scout.server.extensions import store
 from scout.constants import PHENOTYPE_GROUPS, CASE_SEARCH_TERMS
 
 CASE_SEARCH_KEY = [(value["prefix"], value["label"]) for key, value in CASE_SEARCH_TERMS.items()]
+
+
+def phenotype_choices():
+    """Create a list of tuples containing the options for a multiselect"""
+    hpo_tuples = []
+    for key in PHENOTYPE_GROUPS.keys():
+        option_name = " ".join(
+            [key, ",", PHENOTYPE_GROUPS[key]["name"], "(", PHENOTYPE_GROUPS[key]["abbr"], ")",]
+        )
+        hpo_tuples.append((option_name, option_name))
+
+    return hpo_tuples
+
+
+class HpoListMultiSelect(SelectMultipleField):
+    """Validating a multiple select containing a list of HPO terms"""
+
+    def pre_validate(self, form):
+        hpo_term = None
+        for choice in form.pheno_groups.data:  # chech that HPO terms are valid
+            hpo_term = choice.split(" ")[
+                0
+            ]  # HPO terms formatted like this 'HP:0001298 , Encephalopathy ( ENC )'
+            if store.hpo_term(hpo_term) is None:
+                form.pheno_groups.errors.append(f"'{hpo_term}' is not a valid HPO term")
+                return False
 
 
 class NonValidatingSelectMultipleField(SelectMultipleField):
@@ -102,3 +129,24 @@ class CaseFilterForm(FlaskForm):
     skip_assigned = BooleanField("Hide assigned")
     is_research = BooleanField("Research only")
     search = SubmitField(label="Search")
+
+
+### Phenopanels form fields ###
+class PhenoSubPanelForm(FlaskForm):
+    """A form corresponfing to a phenopanel sub-panel"""
+
+    title = TextField("Subpanel title", validators=[validators.InputRequired()])
+    subtitle = TextField("Subpanel subtitle", validators=[validators.Optional()])
+    pheno_groups = HpoListMultiSelect(
+        "Subpanel HPO groups", choices=phenotype_choices(), validators=[validators.InputRequired()]
+    )
+    add_subpanel = SubmitField("save subpanel")
+
+
+class PhenoModelForm(FlaskForm):
+    """Base Phenopanel form, not including any subpanel"""
+
+    model_name = TextField("Phenotype panel name", validators=[validators.InputRequired()])
+    model_desc = TextField("Description", validators=[validators.Optional()])
+    # subpanels = FieldList(FormField(PhenoSubPanel()))
+    create_model = SubmitField("create")
