@@ -111,20 +111,34 @@
       <div class="card mt-3">
         <div class="card-body">
           <div class="row">
-            <div class="col-3" style="background-color: #e3e3e3;">
+            <div class="col-3">
               <h5 class="card-title">{{submodel.title}}</h5>
               <h6 class="card-subtitle mb-2 text-muted">{{submodel.subtitle}}</h6>
             </div>
             <div class="col-9">
-              {%- for item in submodel.hpo_groups.children recursive %}
-                <li class="tree">
-                  <input type="checkbox" id="{{item.name}}" name="{{item.name}}" onclick="subCheck('{{submodel_id}}','{{item.name}}')">
-                  <label for="{{item.name}}">{{ item.name }}<strong>({{item.description}})</strong></label>
-                  {%- if item.children -%}
-                    <ul class="tree">{{ loop(item.children) }}</ul>
-                  {%- endif %}
-                </li>
-              {%- endfor %}
+              <table class="table table-striped">
+              {% for term_id, term_obj in submodel.hpo_groups.items() %}
+
+                <tr>
+                  <td>
+                    <input type="checkbox" id="{{term_id}}" name="{{term_id}}">
+                    <label for="{{term_tree}}">{{ term_id }}<strong>({{term_obj.description}})</strong></label>
+                    {% for item in term_obj.children recursive %}
+                      <li class="tree">
+                        <label for="{{item.name}}">{{ item.name }}<strong>({{item.description}})</strong></label>
+                        {%- if item.children -%}
+                          <ul class="tree">{{ loop(item.children) }}</ul>
+                        {%- endif %}
+                      </li>
+                    {%- endfor %}
+
+
+                  </td>
+                </tr>
+              {% endfor %}
+              </table>
+
+
             </div> <!--end of phenotype tree column div-->
           </div> <!--end of div row-->
         </div>
