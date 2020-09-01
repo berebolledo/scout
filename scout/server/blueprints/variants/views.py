@@ -273,7 +273,8 @@ def cancer_variants(institute_id, case_name):
             store, institute_obj, case_obj, user_obj, category, request.form
         )
 
-        if form.validate_on_submit() is False:
+        # if user is not loading an existing filter, check filter form
+        if request.form.get("load_filter") is None and form.validate_on_submit() is False:
             # Flash a message with errors
             for field, err_list in form.errors.items():
                 for err in err_list:
@@ -415,11 +416,17 @@ def upload_panel(institute_id, case_name):
     # HTTP redirect code 307 asks that the browser preserves the method of request (POST).
     if category == "sv":
         return redirect(
-            url_for(".sv_variants", institute_id=institute_id, case_name=case_name, **form.data,),
+            url_for(
+                ".sv_variants",
+                institute_id=institute_id,
+                case_name=case_name,
+                **form.data,
+            ),
             code=307,
         )
     return redirect(
-        url_for(".variants", institute_id=institute_id, case_name=case_name, **form.data), code=307,
+        url_for(".variants", institute_id=institute_id, case_name=case_name, **form.data),
+        code=307,
     )
 
 
