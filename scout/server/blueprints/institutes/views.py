@@ -392,7 +392,8 @@ def remove_phenomodel():
     model_obj = store.phenomodel_collection.find_one_and_delete({"_id": model_id})
     if model_obj is not None:
         flash(
-            f"Phenotype model {model_obj['name']} was deleted from the database.", "success",
+            f"Phenotype model {model_obj['name']} was deleted from the database.",
+            "success",
         )
     else:
         flash(f"Could not delete {model_obj['name']} from the database.", "info")
