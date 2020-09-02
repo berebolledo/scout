@@ -3,11 +3,11 @@
 
 class PhenoPanel(dict):
     """Represents an advanced phenotyping object. Can contain sub-panels objects
-        _id = str # created by this class
-        institute = str # required
-        name = str
-        description = str
-        subpanels = []
+    _id = str # created by this class
+    institute = str # required
+    name = str
+    description = str
+    subpanels = []
     """
 
     def __init__(self, id, institute, name, description):
