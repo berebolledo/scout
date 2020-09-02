@@ -443,3 +443,10 @@ def phenomodel(institute_id, model_id):
         default_phenotypes=default_phenotypes,
         hide_subpanel=hide_subpanel,
     )
+
+
+@blueprint.route("/<institute_id>/phenomodel/<model_id>/<submodel_id>/edit", methods=["POST"])
+def update_submodel(institute_id, model_id, submodel_id):
+    """Update a phenotype submodel for a given phenomodel"""
+    institute_obj = institute_and_case(store, institute_id)
+    return f"Remove sumbodel {submodel_id} for model {model_id}"
