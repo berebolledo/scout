@@ -60,26 +60,6 @@
     <div class="card mt-3">
       <form action="#" id="new_subpanel_form" method="POST">
         {{ subpanel_form.csrf_token }}
-        <div class="form-row mt-3 ml-3 d-flex justify-content-between">
-          <div class="form-group col-md-11">
-            {{ subpanel_form.pheno_groups.label(class="control-label", data_toggle="tooltip", data_placement="top", title="All HPO terms children of this terms will be displayed as checkboxes in the model sub-panel. These HPO groups can always be modified in the future.") }}<br>
-            <select multiple="multiple" id="pheno_groups" name="pheno_groups" class="form-control mr-3" style="width:100%;">
-              <!--print selected options-->
-              {% for choice in subpanel_form.pheno_groups.data %}
-                <option value="{{choice}}" selected>{{choice}}</option>
-              {% endfor %}
-              <!--print the rest of the institute custom phenotype groups-->
-              {% for choice in subpanel_form.pheno_groups.choices %}
-                {% if choice[0] not in subpanel_form.pheno_groups.data %}
-                  <option value="{{choice[0]}}" {% if choice[0].split(' ,')[0] in subpanel_form.pheno_groups.data %} selected {% endif %}>{{choice[1]}}</option>
-                {% endif %}
-              {% endfor %}
-            </select>
-            {% for error in subpanel_form.pheno_groups.errors %}
-              <span style="color: red;">{{ error }}</span><br>
-            {% endfor %}
-          </div>
-        </div>
         <div class="form-row ml-3 mr-3 mt-3 mb-3">
           <div class="col-5">
             {{ subpanel_form.title.label }}:
@@ -117,24 +97,26 @@
               </div>
               <div class="col-9">
                 <table class="table table-striped">
-                {% for term_id, term_obj in submodel.hpo_groups.items() %}
-                  <tr>
-                    <td>
-                      <input type="checkbox" id="{{term_id}}" name="{{term_id}}">
-                      <label for="{{term_tree}}">{{ term_id }}<strong>({{term_obj.description}})</strong></label>
-                      <div style="margin-left: 35px">
-                        {% for item in term_obj.children recursive %}
-                          <li class="tree">
-                            <label for="{{item.name}}">{{ item.name }}<strong>({{item.description}})</strong></label>
-                            {%- if item.children -%}
-                              <ul class="tree">{{ loop(item.children) }}</ul>
-                            {%- endif %}
-                          </li>
-                        {%- endfor %}
-                      </div>
-                    </td>
-                  </tr>
-                {% endfor %}
+                {% if hpo_groups in  submodel %}
+                  {% for term_id, term_obj in submodel.hpo_groups.items() %}
+                    <tr>
+                      <td>
+                        <input type="checkbox" id="{{term_id}}" name="{{term_id}}">
+                        <label for="{{term_tree}}">{{ term_id }}<strong>({{term_obj.description}})</strong></label>
+                        <div style="margin-left: 35px">
+                          {% for item in term_obj.children recursive %}
+                            <li class="tree">
+                              <label for="{{item.name}}">{{ item.name }}<strong>({{item.description}})</strong></label>
+                              {%- if item.children -%}
+                                <ul class="tree">{{ loop(item.children) }}</ul>
+                              {%- endif %}
+                            </li>
+                          {%- endfor %}
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% endif %}
                 </table>
               </div> <!--end of phenotype tree column div-->
             </div> <!--end of div row-->

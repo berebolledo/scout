@@ -574,10 +574,7 @@ def create_submodel(store, model_id, request):
     """
     submodel_title = request.form.get("title")
     submodel_subtitle = request.form.get("subtitle")
-    hpo_groups = request.form.getlist("pheno_groups")
-    hpo_terms = []
-    for term in hpo_groups:
-        hpo_terms.append(term.split(" ")[0])
-    updated_model = store.add_pheno_submodel(model_id, submodel_title, submodel_subtitle, hpo_terms)
+
+    updated_model = store.add_pheno_submodel(model_id, submodel_title, submodel_subtitle)
 
     return updated_model

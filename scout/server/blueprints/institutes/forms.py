@@ -154,9 +154,6 @@ class PhenoSubPanelForm(FlaskForm):
 
     title = TextField("Subpanel title", validators=[validators.InputRequired()])
     subtitle = TextField("Subpanel subtitle", validators=[validators.Optional()])
-    pheno_groups = HpoListMultiSelect(
-        "Subpanel HPO groups", choices=phenotype_choices(), validators=[validators.InputRequired()]
-    )
     add_subpanel = SubmitField("save subpanel")
 
 

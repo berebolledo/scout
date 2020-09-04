@@ -215,59 +215,76 @@ class HpoHandler(object):
         LOG.info(f"Built ontology for HPO term:{hpo_id}:\n{RenderTree(term_node)}")
         return term_node
 
-    def find_submodel(self, model_id, title):
+    def model_by_submodel(self, model_id, submodel_id=None, submodel_title=None):
         """Return a phenotype submodel by providing its parent model and its title
 
         Args:
             model_id(str): name of model
-            title(str):title
+            submodel_id(str): id of a submodel
+            submodel_title(str): title of a submodel
 
         Returns:
             result(dict)
         """
-        submodel_id = generate_md5_key([model_id, title])
+        if submodel_title:
+            submodel_id = generate_md5_key([model_id, submodel_title])
         submodel_key = ".".join(["submodels", submodel_id])
         query = {"_id": model_id, submodel_key: {"$exists": True}}
+        LOG.info(query)
         result = self.phenomodel_collection.find_one(query)
         return result
 
-    def add_pheno_submodel(self, model_id, submodel_title, submodel_subtitle, hpo_ids):
-        """Adds a new phenotype submodel (one or more HPO terms with their children) to a phenotype model.
+    def delete_pheno_submodel(self, model_id, submodel_id):
+        """Removed a phenotype submodel from a phenotype model
+
+        Args:
+            model_id(str): id of a phenotype model
+            submodel_id(str): d of a phenotype submodel
+
+        Returns:
+            result(dict):
+
+        """
+        model_obj = self.model_by_submodel(model_id=model_id, submodel_id=submodel_id)
+        if model_obj is None:
+            LOG.error("COULD NOT FIND MODEL")
+            return
+
+        submodels = model_obj.get("submodels", {})
+        submodels.pop(submodel_id, None)  # remove the submodel if found in model
+
+        updated_model = self.phenomodel_collection.find_one_and_update(
+            {"_id": model_id},
+            {
+                "$set": {
+                    "submodels": submodels,
+                    "updated": datetime.datetime.now(),
+                }
+            },
+            return_document=pymongo.ReturnDocument.AFTER,
+        )
+        return updated_model
+
+    def add_pheno_submodel(self, model_id, submodel_title, submodel_subtitle):
+        """Adds a new phenotype submodel with no HPO terms to a phenotype model.
 
         Args:
             model_id(str): id of a phenotype model
             submodel_title(str): title of submodel
             submodel_subtitle(str): subtitle of submodel
-            hpo_ids(list): a list of HPO term IDs (example HP:0012759)
 
         Returns:
             updated_model(dict): a dictionary corresponding to the updated phenotype model
         """
         # Check if a submodel with the provided names already exists
-        model_exists = self.find_submodel(model_id, submodel_title)
+        model_exists = self.model_by_submodel(model_id=model_id, submodel_title=submodel_title)
         if model_exists:
             return
-
-        hpo_trees = {}
-
-        # Create an HPO tree with all HPO terms of the subpanel
-        for term in hpo_ids:
-            hpo_tree = self.build_phenotype_tree(term)
-
-            if hpo_tree is None:
-                hpo_trees[term] = {}
-
-            # Create object that exports tree node to dictionary
-            exporter = DictExporter(dictcls=OrderedDict, attriter=sorted)
-            tree_dict = exporter.export(hpo_tree)
-
-            hpo_trees[term] = tree_dict
 
         # Create submodel dictionary
         submodel_obj = dict(
             title=submodel_title,
             subtitle=submodel_subtitle,
-            hpo_groups=hpo_trees,
             created=datetime.datetime.now(),
             updated=datetime.datetime.now(),
         )

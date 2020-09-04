@@ -73,8 +73,7 @@
           <tr>
             <th>Name</th>
             <th>Description</th>
-            <th>Subpanels</th>
-            <th>Terms</th>
+            <th>n. subpanels</th>
             <th>Created</th>
             <th>Updated</th>
             <th></th>
@@ -87,8 +86,7 @@
                 <a href="{{ url_for('overview.phenomodel', institute_id=institute._id, model_id=model._id) }}">{{model.name}}</button></a>
               </td>
               <td>{{model.description}}</td>
-              <td></td>
-              <td></td>
+              <td>{{model.submodels|length}}</td>
               <td>{{model.created.strftime('%Y-%m-%d')}}</td>
               <td>{{model.updated.strftime('%Y-%m-%d')}}</td>
               <td>

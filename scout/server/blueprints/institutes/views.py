@@ -409,7 +409,6 @@ def phenomodel(institute_id, model_id):
 
     pheno_form = PhenoModelForm(request.form)
     subpanel_form = PhenoSubPanelForm(request.form)
-    default_phenotypes = [choice[0].split(" ")[0] for choice in subpanel_form.pheno_groups.choices]
     hide_subpanel = True
 
     if request.method == "POST":
@@ -440,7 +439,6 @@ def phenomodel(institute_id, model_id):
         pheno_form=pheno_form,
         phenomodel=phenomodel_obj,
         subpanel_form=subpanel_form,
-        default_phenotypes=default_phenotypes,
         hide_subpanel=hide_subpanel,
     )
 
@@ -449,4 +447,11 @@ def phenomodel(institute_id, model_id):
 def update_submodel(institute_id, model_id, submodel_id):
     """Update a phenotype submodel for a given phenomodel"""
     institute_obj = institute_and_case(store, institute_id)
-    return f"Remove sumbodel {submodel_id} for model {model_id}"
+    if "remove_submodel" in request.form:
+        updated_model = store.delete_pheno_submodel(model_id, submodel_id)
+        if updated_model:
+            flash(f"Remove sumbodel {submodel_id} for model {model_id}")
+        else:
+            flash("NOPE", "warning")
+
+    return redirect(request.referrer)
