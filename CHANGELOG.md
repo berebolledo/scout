@@ -12,6 +12,7 @@ About changelog [here](https://keepachangelog.com/en/1.0.0/)
 - Remove leading and trailing whitespaces from panel_name and display_name when panel is created
 - Mark MANE transcript in list of transcripts in "Transcript overview" on variant page
 - Show default panel name in case sidebar
+- Adds a gh action that checks that the changelog is updated
 
 ### Fixed
 - Report pages redirect to login instead of crashing when session expires
@@ -23,9 +24,12 @@ About changelog [here](https://keepachangelog.com/en/1.0.0/)
 - Clinical filter required an extra click to Filter to return variants
 - Restore pagination and shrink badges in the variants page tables
 - Removing a user from the command line now inactivates the case only if user is last assignee and case is active
+- Bugfix, LoqusDB per institute feature crashed when institute id was empty string
+- filter removal and upload for filters deleted from another page/other user
 
 ### Changed
 - Highlight color on normal STRs in the variants table from green to blue
+- Display breakpoints coordinates in verification emails only for structural variants
 
 
 ## [4.20]
@@ -40,6 +44,7 @@ About changelog [here](https://keepachangelog.com/en/1.0.0/)
 - Peddy info fields in the demo config file
 - Added load config safety check for multiple alignment files for one individual
 - Formatting of cancer variants table
+- Missing Score in SV variants table
 
 ### Changed
 - Updated the documentation on how to create a new software release
